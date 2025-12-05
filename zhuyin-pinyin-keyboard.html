@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zhuyin Keyboard with Pinyin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .search-container {
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 18px;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-box:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .key {
+            background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 60px;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .key:hover {
+            background: linear-gradient(180deg, #e9ecef 0%, #dee2e6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .key.highlight {
+            background: linear-gradient(180deg, #ffd700 0%, #ffed4e 100%);
+            border-color: #ffa500;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            animation: shine 0.6s ease-in-out;
+        }
+
+        @keyframes shine {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(255, 215, 0, 1);
+            }
+        }
+
+        .zhuyin {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .pinyin {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .key.highlight .zhuyin {
+            color: #000;
+        }
+
+        .key.highlight .pinyin {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .key.special {
+            background: linear-gradient(180deg, #dee2e6 0%, #ced4da 100%);
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .key.special:hover {
+            background: linear-gradient(180deg, #ced4da 0%, #adb5bd 100%);
+        }
+
+        .key.space {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .key.backspace {
+            background: linear-gradient(180deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            font-size: 20px;
+        }
+
+        .key.backspace:hover {
+            background: linear-gradient(180deg, #5a6268 0%, #495057 100%);
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        .output-container {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .output-header {
+            display: none;
+        }
+
+        .output-wrapper {
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+
+        .output-box {
+            width: 100%;
+            min-height: 35px;
+            max-height: 35px;
+            padding: 8px;
+            padding-right: 180px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            resize: none;
+            font-family: 'Microsoft JhengHei', 'PingFang TC', 'Arial Unicode MS', sans-serif;
+            color: #333;
+            line-height: 1.4;
+            outline: none;
+            overflow-y: auto;
+        }
+
+        .output-box:focus {
+            background: white;
+        }
+
+        .button-group {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 10px;
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-copy {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background: #5568d3;
+        }
+
+        .btn-clear {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #c0392b;
+        }
+
+        .btn-space {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-space:hover {
+            background: #7f8c8d;
+        }
+
+        .copy-notification {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            right: 10px;
+            background: #28a745;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .copy-notification.show {
+            opacity: 1;
+        }
+
+        .info {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px 10px;
+            }
+
+            h1 {
+                font-size: 1.3em;
+                margin-bottom: 12px;
+            }
+
+            .search-container {
+                margin-bottom: 15px;
+            }
+
+            .search-box {
+                padding: 10px 12px;
+                font-size: 16px;
+            }
+
+            .keyboard {
+                gap: 4px;
+                overflow-x: visible;
+            }
+
+            .row {
+                gap: 4px;
+                flex-wrap: nowrap;
+            }
+
+            .key {
+                min-width: 0;
+                width: 8.5%;
+                min-height: 48px;
+                padding: 6px 2px;
+                flex-shrink: 1;
+            }
+
+            /* First row - 11 keys */
+            .row:nth-child(1) {
+                padding: 0 1%;
+            }
+
+            /* Second row - 10 keys */
+            .row:nth-child(2) {
+                padding: 0 5.5%;
+            }
+
+            .row:nth-child(2) .key {
+                width: 9%;
+            }
+
+            /* Third row - 10 keys */
+            .row:nth-child(3) {
+                padding: 0 5.5%;
+            }
+
+            .row:nth-child(3) .key {
+                width: 9%;
+            }
+
+            /* Fourth row - 10 keys */
+            .row:nth-child(4) {
+                padding: 0 5.5%;
+            }
+
+            .row:nth-child(4) .key {
+                width: 9%;
+            }
+
+            /* Fifth row - special keys */
+            .row:nth-child(5) {
+                padding: 0 2%;
+            }
+
+            .row:nth-child(5) .key {
+                min-width: 50px;
+            }
+
+            .row:nth-child(5) .key.space {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .zhuyin {
+                font-size: 18px;
+            }
+
+            .pinyin {
+                font-size: 8px;
+            }
+
+            .info {
+                font-size: 11px;
+                margin-top: 12px;
+            }
+
+            .output-container {
+                margin-top: 0;
+                margin-bottom: 15px;
+            }
+
+            .output-box {
+                min-height: 35px;
+                max-height: 35px;
+                font-size: 14px;
+                padding: 8px;
+                padding-right: 170px;
+            }
+
+            .btn {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+
+            .button-group {
+                gap: 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px 8px;
+            }
+
+            h1 {
+                font-size: 1.2em;
+            }
+
+            .keyboard {
+                gap: 3px;
+            }
+
+            .row {
+                gap: 3px;
+            }
+
+            .key {
+                width: 8.5%;
+                min-height: 44px;
+                padding: 5px 1px;
+            }
+
+            /* First row - 11 keys */
+            .row:nth-child(1) {
+                padding: 0 1%;
+            }
+
+            /* Second row - 10 keys */
+            .row:nth-child(2) {
+                padding: 0 5.5%;
+            }
+
+            .row:nth-child(2) .key {
+                width: 9%;
+            }
+
+            /* Third row - 10 keys */
+            .row:nth-child(3) {
+                padding: 0 5.5%;
+            }
+
+            .row:nth-child(3) .key {
+                width: 9%;
+            }
+
+            /* Fourth row - 10 keys */
+            .row:nth-child(4) {
+                padding: 0 5.5%;
+            }
+
+            .row:nth-child(4) .key {
+                width: 9%;
+            }
+
+            /* Fifth row - special keys */
+            .row:nth-child(5) {
+                padding: 0 2%;
+            }
+
+            .row:nth-child(5) .key {
+                min-width: 45px;
+            }
+
+            .row:nth-child(5) .key.space {
+                flex: 1;
+                min-width: 100px;
+            }
+
+            .zhuyin {
+                font-size: 16px;
+            }
+
+            .pinyin {
+                font-size: 7px;
+            }
+
+            .output-container {
+                margin-top: 0;
+                margin-bottom: 12px;
+            }
+
+            .output-box {
+                min-height: 32px;
+                max-height: 32px;
+                font-size: 13px;
+                padding: 8px;
+                padding-right: 160px;
+            }
+
+            .btn {
+                padding: 5px 8px;
+                font-size: 10px;
+            }
+
+            .button-group {
+                gap: 3px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .container {
+                padding: 10px 5px;
+            }
+
+            h1 {
+                font-size: 1.1em;
+            }
+
+            .keyboard {
+                gap: 2px;
+            }
+
+            .row {
+                gap: 2px;
+            }
+
+            .key {
+                width: 8.8%;
+                min-height: 40px;
+                padding: 4px 1px;
+            }
+
+            /* First row - 11 keys */
+            .row:nth-child(1) {
+                padding: 0 0.5%;
+            }
+
+            /* Second row - 10 keys */
+            .row:nth-child(2) {
+                padding: 0 5%;
+            }
+
+            .row:nth-child(2) .key {
+                width: 9.2%;
+            }
+
+            /* Third row - 10 keys */
+            .row:nth-child(3) {
+                padding: 0 5%;
+            }
+
+            .row:nth-child(3) .key {
+                width: 9.2%;
+            }
+
+            /* Fourth row - 10 keys */
+            .row:nth-child(4) {
+                padding: 0 5%;
+            }
+
+            .row:nth-child(4) .key {
+                width: 9.2%;
+            }
+
+            /* Fifth row - special keys */
+            .row:nth-child(5) {
+                padding: 0 1%;
+            }
+
+            .row:nth-child(5) .key {
+                min-width: 40px;
+            }
+
+            .row:nth-child(5) .key.space {
+                flex: 1;
+                min-width: 90px;
+            }
+
+            .zhuyin {
+                font-size: 15px;
+            }
+
+            .pinyin {
+                font-size: 6.5px;
+            }
+
+            .output-container {
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+
+            .output-box {
+                min-height: 30px;
+                max-height: 30px;
+                font-size: 12px;
+                padding: 6px;
+                padding-right: 150px;
+            }
+
+            .btn {
+                padding: 4px 7px;
+                font-size: 9px;
+            }
+
+            .button-group {
+                gap: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>注音符號鍵盤 Zhuyin Keyboard</h1>
+        
+        <div class="search-container">
+            <input 
+                type="text" 
+                class="search-box" 
+                id="searchInput" 
+                placeholder="Type pinyin to highlight matching Zhuyin... (e.g., bo, po, mo)"
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="output-container">
+            <div class="output-wrapper">
+                <div class="button-group">
+                    <button class="btn btn-space" id="spaceBtn" title="Add space">Space</button>
+                    <button class="btn btn-copy" id="copyBtn" title="Copy to clipboard">Copy</button>
+                    <button class="btn btn-clear" id="clearBtn" title="Clear all">Clear</button>
+                </div>
+                <span class="copy-notification" id="copyNotification">✓ Copied!</span>
+                <textarea 
+                    class="output-box" 
+                    id="outputBox" 
+                    placeholder="Click keys to type..."
+                ></textarea>
+            </div>
+        </div>
+
+        <div class="keyboard" id="keyboard">
+            <!-- Keyboard will be generated by JavaScript -->
+        </div>
+
+        <div class="info">
+            Type pinyin in the search box to highlight Zhuyin • Click keys to type Zhuyin
+        </div>
+    </div>
+
+    <script>
+        // Zhuyin to Pinyin mapping - matching the keyboard layout from image
+        const zhuyinData = [
+            // Row 1 - 11 keys
+            [
+                { zhuyin: 'ㄅ', pinyin: 'b' },
+                { zhuyin: 'ㄉ', pinyin: 'd' },
+                { zhuyin: 'ˇ', pinyin: '3rd' },
+                { zhuyin: 'ˋ', pinyin: '4th' },
+                { zhuyin: 'ㄓ', pinyin: 'zh' },
+                { zhuyin: 'ˊ', pinyin: '2nd' },
+                { zhuyin: '˙', pinyin: 'light' },
+                { zhuyin: 'ㄚ', pinyin: 'a' },
+                { zhuyin: 'ㄞ', pinyin: 'ai' },
+                { zhuyin: 'ㄢ', pinyin: 'an' },
+                { zhuyin: 'ㄦ', pinyin: 'er' }
+            ],
+            // Row 2 - 10 keys
+            [
+                { zhuyin: 'ㄆ', pinyin: 'p' },
+                { zhuyin: 'ㄊ', pinyin: 't' },
+                { zhuyin: 'ㄍ', pinyin: 'g' },
+                { zhuyin: 'ㄐ', pinyin: 'j' },
+                { zhuyin: 'ㄔ', pinyin: 'ch' },
+                { zhuyin: 'ㄗ', pinyin: 'z' },
+                { zhuyin: 'ㄧ', pinyin: 'i/yi' },
+                { zhuyin: 'ㄛ', pinyin: 'o' },
+                { zhuyin: 'ㄟ', pinyin: 'ei' },
+                { zhuyin: 'ㄣ', pinyin: 'en' }
+            ],
+            // Row 3 - 10 keys
+            [
+                { zhuyin: 'ㄇ', pinyin: 'm' },
+                { zhuyin: 'ㄋ', pinyin: 'n' },
+                { zhuyin: 'ㄎ', pinyin: 'k' },
+                { zhuyin: 'ㄑ', pinyin: 'q' },
+                { zhuyin: 'ㄕ', pinyin: 'sh' },
+                { zhuyin: 'ㄘ', pinyin: 'c' },
+                { zhuyin: 'ㄨ', pinyin: 'u/wu' },
+                { zhuyin: 'ㄜ', pinyin: 'e' },
+                { zhuyin: 'ㄠ', pinyin: 'ao' },
+                { zhuyin: 'ㄤ', pinyin: 'ang' }
+            ],
+            // Row 4 - 10 keys
+            [
+                { zhuyin: 'ㄈ', pinyin: 'f' },
+                { zhuyin: 'ㄌ', pinyin: 'l' },
+                { zhuyin: 'ㄏ', pinyin: 'h' },
+                { zhuyin: 'ㄒ', pinyin: 'x' },
+                { zhuyin: 'ㄖ', pinyin: 'r' },
+                { zhuyin: 'ㄙ', pinyin: 's' },
+                { zhuyin: 'ㄩ', pinyin: 'ü/yu' },
+                { zhuyin: 'ㄝ', pinyin: 'ê' },
+                { zhuyin: 'ㄡ', pinyin: 'ou' },
+                { zhuyin: 'ㄥ', pinyin: 'eng' }
+            ],
+            // Row 5 - Bottom row with spacebar and backspace
+            [
+                { zhuyin: '?123', pinyin: 'numbers', special: 'numbers' },
+                { zhuyin: ',', pinyin: 'comma', special: 'comma' },
+                { zhuyin: 'SPACE', pinyin: 'space', special: 'space' },
+                { zhuyin: '。', pinyin: 'period', special: 'period' },
+                { zhuyin: '⌫', pinyin: 'backspace', special: 'backspace' }
+            ]
+        ];
+
+        // Generate keyboard
+        function generateKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            
+            zhuyinData.forEach((row, rowIndex) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row';
+                
+                row.forEach((key) => {
+                    const keyDiv = document.createElement('div');
+                    keyDiv.className = 'key';
+                    keyDiv.dataset.zhuyin = key.zhuyin;
+                    keyDiv.dataset.pinyin = key.pinyin.toLowerCase();
+                    
+                    // Handle special keys
+                    if (key.special) {
+                        keyDiv.dataset.special = key.special;
+                        keyDiv.classList.add('special');
+                        
+                        if (key.special === 'space') {
+                            keyDiv.classList.add('space');
+                            keyDiv.textContent = '注音';
+                        } else if (key.special === 'backspace') {
+                            keyDiv.classList.add('backspace');
+                            keyDiv.innerHTML = '⌫';
+                        } else {
+                            keyDiv.innerHTML = `<div class="zhuyin">${key.zhuyin}</div>`;
+                        }
+                    } else {
+                        const zhuyinSpan = document.createElement('div');
+                        zhuyinSpan.className = 'zhuyin';
+                        zhuyinSpan.textContent = key.zhuyin;
+                        
+                        const pinyinSpan = document.createElement('div');
+                        pinyinSpan.className = 'pinyin';
+                        pinyinSpan.textContent = key.pinyin;
+                        
+                        keyDiv.appendChild(zhuyinSpan);
+                        keyDiv.appendChild(pinyinSpan);
+                    }
+                    
+                    rowDiv.appendChild(keyDiv);
+                });
+                
+                keyboard.appendChild(rowDiv);
+            });
+        }
+
+        // Search functionality
+        function handleSearch(searchTerm) {
+            const keys = document.querySelectorAll('.key');
+            searchTerm = searchTerm.toLowerCase().trim();
+            
+            keys.forEach(key => {
+                const pinyin = key.dataset.pinyin.toLowerCase();
+                const pinyinVariants = pinyin.split('/');
+                
+                // Check if search term matches any variant
+                const matches = pinyinVariants.some(variant => 
+                    variant.includes(searchTerm) || searchTerm.includes(variant)
+                );
+                
+                if (searchTerm && matches) {
+                    key.classList.add('highlight');
+                } else {
+                    key.classList.remove('highlight');
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            handleSearch(e.target.value);
+        });
+
+        // Output box functionality
+        const outputBox = document.getElementById('outputBox');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const spaceBtn = document.getElementById('spaceBtn');
+        const copyNotification = document.getElementById('copyNotification');
+
+        // Click on keyboard keys to add zhuyin to output
+        document.addEventListener('click', (e) => {
+            const key = e.target.closest('.key');
+            if (key) {
+                const special = key.dataset.special;
+                
+                // Handle special keys
+                if (special === 'space') {
+                    const startPos = outputBox.selectionStart;
+                    const endPos = outputBox.selectionEnd;
+                    const textBefore = outputBox.value.substring(0, startPos);
+                    const textAfter = outputBox.value.substring(endPos);
+                    
+                    outputBox.value = textBefore + ' ' + textAfter;
+                    
+                    const newCursorPos = startPos + 1;
+                    outputBox.setSelectionRange(newCursorPos, newCursorPos);
+                    outputBox.focus();
+                } else if (special === 'backspace') {
+                    const startPos = outputBox.selectionStart;
+                    const endPos = outputBox.selectionEnd;
+                    
+                    if (startPos !== endPos) {
+                        // Delete selection
+                        const textBefore = outputBox.value.substring(0, startPos);
+                        const textAfter = outputBox.value.substring(endPos);
+                        outputBox.value = textBefore + textAfter;
+                        outputBox.setSelectionRange(startPos, startPos);
+                    } else if (startPos > 0) {
+                        // Delete one character before cursor
+                        const textBefore = outputBox.value.substring(0, startPos - 1);
+                        const textAfter = outputBox.value.substring(startPos);
+                        outputBox.value = textBefore + textAfter;
+                        outputBox.setSelectionRange(startPos - 1, startPos - 1);
+                    }
+                    outputBox.focus();
+                } else if (special === 'comma' || special === 'period' || special === 'numbers') {
+                    // Insert the character
+                    const zhuyin = key.dataset.zhuyin;
+                    const startPos = outputBox.selectionStart;
+                    const endPos = outputBox.selectionEnd;
+                    const textBefore = outputBox.value.substring(0, startPos);
+                    const textAfter = outputBox.value.substring(endPos);
+                    
+                    outputBox.value = textBefore + zhuyin + textAfter;
+                    
+                    const newCursorPos = startPos + zhuyin.length;
+                    outputBox.setSelectionRange(newCursorPos, newCursorPos);
+                    outputBox.focus();
+                } else {
+                    // Regular zhuyin key
+                    const zhuyin = key.dataset.zhuyin;
+                    
+                    // Get cursor position
+                    const startPos = outputBox.selectionStart;
+                    const endPos = outputBox.selectionEnd;
+                    const textBefore = outputBox.value.substring(0, startPos);
+                    const textAfter = outputBox.value.substring(endPos);
+                    
+                    // Insert zhuyin at cursor position
+                    outputBox.value = textBefore + zhuyin + textAfter;
+                    
+                    // Move cursor after inserted character
+                    const newCursorPos = startPos + zhuyin.length;
+                    outputBox.setSelectionRange(newCursorPos, newCursorPos);
+                    
+                    // Focus back on textarea
+                    outputBox.focus();
+                }
+                
+                // Visual feedback
+                key.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    key.style.transform = '';
+                }, 100);
+            }
+        });
+
+        // Copy button
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(outputBox.value);
+                copyNotification.classList.add('show');
+                setTimeout(() => {
+                    copyNotification.classList.remove('show');
+                }, 2000);
+            } catch (err) {
+                // Fallback for older browsers
+                outputBox.select();
+                document.execCommand('copy');
+                copyNotification.classList.add('show');
+                setTimeout(() => {
+                    copyNotification.classList.remove('show');
+                }, 2000);
+            }
+        });
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            outputBox.value = '';
+        });
+
+        // Space button
+        spaceBtn.addEventListener('click', () => {
+            const startPos = outputBox.selectionStart;
+            const endPos = outputBox.selectionEnd;
+            const textBefore = outputBox.value.substring(0, startPos);
+            const textAfter = outputBox.value.substring(endPos);
+            
+            outputBox.value = textBefore + ' ' + textAfter;
+            
+            const newCursorPos = startPos + 1;
+            outputBox.setSelectionRange(newCursorPos, newCursorPos);
+            outputBox.focus();
+        });
+
+        // Initialize
+        generateKeyboard();
+    </script>
+</body>
+</html>
