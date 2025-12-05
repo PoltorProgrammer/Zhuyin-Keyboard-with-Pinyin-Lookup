@@ -2,7 +2,7 @@
 
 An interactive web-based Zhuyin (Bopomofo) keyboard that displays pinyin romanization for each character. Features real-time search functionality to highlight matching Zhuyin characters as you type pinyin.
 
-[![Open App](https://img.shields.io/badge/Open-Live%20Demo-blue?style=for-the-badge&logo=googlechrome)](YOUR_DEPLOYMENT_URL_HERE)
+[![Open App](https://img.shields.io/badge/Open-Live%20Demo-blue?style=for-the-badge&logo=googlechrome)](https://poltorprogrammer.github.io/Zhuyin-Keyboard-with-Pinyin-Lookup/zhuyin-pinyin-keyboard.html)
 
 ## ✨ Features
 
